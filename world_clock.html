@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock Module</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0f1c;
+            --text-color: #0ff;
+            --glow-color: rgba(0, 255, 255, 0.4);
+            --dim-color: rgba(0, 255, 255, 0.2);
+            --font-main: 'Orbitron', monospace;
+        }
+
+        body {
+            background-color: transparent;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .clock-container {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid var(--dim-color);
+            background: rgba(10, 15, 28, 0.5);
+            min-width: 150px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .clock-container:hover {
+            border-color: var(--text-color);
+            box-shadow: 0 0 15px var(--glow-color);
+        }
+
+        .city-name {
+            font-size: 0.9rem;
+            color: var(--dim-color);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid var(--dim-color);
+            display: inline-block;
+            padding-bottom: 2px;
+        }
+
+        .time-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--glow-color);
+            letter-spacing: 2px;
+        }
+
+        .date-display {
+            font-size: 0.7rem;
+            color: var(--dim-color);
+            margin-top: 5px;
+        }
+
+        .sec {
+            font-size: 1.5rem;
+            color: var(--dim-color);
+        }
+
+        /* Scanline effect tailored for iframe content */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+            background-size: 100% 3px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="scanlines"></div>
+
+    <!-- Clock 1: SEOUL (Local) -->
+    <div class="clock-container" id="clock-seoul">
+        <div class="city-name">SEOUL</div>
+        <div class="time-display" id="time-seoul">--:--</div>
+        <div class="date-display" id="date-seoul">----/--/--</div>
+    </div>
+
+    <!-- Clock 2: NEW YORK -->
+    <div class="clock-container" id="clock-ny">
+        <div class="city-name">NEW YORK</div>
+        <div class="time-display" id="time-ny">--:--</div>
+        <div class="date-display" id="date-ny">----/--/--</div>
+    </div>
+
+    <!-- Clock 3: LONDON -->
+    <div class="clock-container" id="clock-london">
+        <div class="city-name">LONDON</div>
+        <div class="time-display" id="time-london">--:--</div>
+        <div class="date-display" id="date-london">----/--/--</div>
+    </div>
+
+    <!-- Clock 4: TOKYO -->
+    <div class="clock-container" id="clock-tokyo">
+        <div class="city-name">TOKYO</div>
+        <div class="time-display" id="time-tokyo">--:--</div>
+        <div class="date-display" id="date-tokyo">----/--/--</div>
+    </div>
+
+    <script>
+        function updateClock(elementId, timeZone) {
+            const now = new Date();
+
+            const optionsTime = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+                timeZone: timeZone
+            };
+
+            const optionsDate = {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                timeZone: timeZone
+            };
+
+            const timeString = new Intl.DateTimeFormat('en-US', optionsTime).format(now);
+            const dateString = new Intl.DateTimeFormat('en-CA', optionsDate).format(now); // yyyy-mm-dd format
+
+            // Split seconds for smaller font
+            const parts = timeString.split(':');
+            const formattedTime = `${parts[0]}:${parts[1]}<span class="sec">:${parts[2]}</span>`;
+
+            document.getElementById(`time-${elementId}`).innerHTML = formattedTime;
+            document.getElementById(`date-${elementId}`).innerText = dateString;
+        }
+
+        function updateAllClocks() {
+            updateClock('seoul', 'Asia/Seoul');
+            updateClock('ny', 'America/New_York');
+            updateClock('london', 'Europe/London');
+            updateClock('tokyo', 'Asia/Tokyo');
+        }
+
+        setInterval(updateAllClocks, 1000);
+        updateAllClocks(); // Initial call
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: transparent;
+            --primary-color: #0ff;
+            --secondary-color: #0088ff;
+            --alert-color: #ff3333;
+            --dim-color: rgba(0, 255, 255, 0.2);
+            --font-main: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .widget {
+            border: 1px solid var(--dim-color);
+            background: rgba(10, 15, 28, 0.4);
+            padding: 15px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .widget h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--dim-color);
+            padding-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        /* CPU / Memory Bars */
+        .bar-container {
+            margin-bottom: 15px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+
+        .bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+            width: 0%;
+            transition: width 0.5s ease-out;
+            box-shadow: 0 0 5px var(--primary-color);
+        }
+
+        /* Network Graph Placeholder */
+        .graph-container {
+            flex-grow: 1;
+            position: relative;
+            border-left: 1px solid var(--dim-color);
+            border-bottom: 1px solid var(--dim-color);
+            overflow: hidden;
+        }
+
+        .graph-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* System Logs */
+        .log-container {
+            flex-grow: 1;
+            overflow-y: hidden;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: rgba(0, 255, 255, 0.8);
+        }
+
+        .log-entry {
+            margin-bottom: 3px;
+        }
+
+        .log-time {
+            color: var(--secondary-color);
+            margin-right: 5px;
+        }
+
+        /* Security Status */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            flex-direction: column;
+        }
+
+        .shield-icon {
+            width: 80px;
+            height: 80px;
+            border: 3px solid var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 0 20px var(--primary-color);
+            animation: pulse-shield 2s infinite;
+        }
+
+        @keyframes pulse-shield {
+            0% {
+                box-shadow: 0 0 10px var(--primary-color);
+                opacity: 0.8;
+            }
+
+            50% {
+                box-shadow: 0 0 25px var(--primary-color);
+                opacity: 1;
+            }
+
+            100% {
+                box-shadow: 0 0 10px var(--primary-color);
+                opacity: 0.8;
+            }
+        }
+
+        .status-text {
+            margin-top: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* Scanline */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1));
+            background-size: 100% 2px;
+            pointer-events: none;
+            z-index: 99;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="scanlines"></div>
+
+    <!-- Widget 1: System Load -->
+    <div class="widget">
+        <h3>System Load</h3>
+        <div class="bar-container">
+            <div class="bar-label"><span>CPU CORE 0</span><span id="cpu0-val">0%</span></div>
+            <div class="bar-bg">
+                <div class="bar-fill" id="cpu0-bar"></div>
+            </div>
+        </div>
+        <div class="bar-container">
+            <div class="bar-label"><span>CPU CORE 1</span><span id="cpu1-val">0%</span></div>
+            <div class="bar-bg">
+                <div class="bar-fill" id="cpu1-bar"></div>
+            </div>
+        </div>
+        <div class="bar-container">
+            <div class="bar-label"><span>MEMORY</span><span id="mem-val">0%</span></div>
+            <div class="bar-bg">
+                <div class="bar-fill" id="mem-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget 2: Network Activity -->
+    <div class="widget">
+        <h3>Network Activity</h3>
+        <div class="graph-container" id="net-graph">
+            <!-- SVG injected by JS -->
+        </div>
+        <div style="text-align: right; font-size: 0.8rem; margin-top: 5px;">
+            UP: <span id="net-up">0 MB/s</span> | DOWN: <span id="net-down">0 MB/s</span>
+        </div>
+    </div>
+
+    <!-- Widget 3: Data Logs -->
+    <div class="widget">
+        <h3>System Logs</h3>
+        <div class="log-container" id="log-list">
+            <!-- Logs injected by JS -->
+        </div>
+    </div>
+
+    <!-- Widget 4: Security -->
+    <div class="widget">
+        <h3>Security Status</h3>
+        <div class="status-indicator">
+            <div class="shield-icon">
+                <span style="font-size: 30px;">🛡️</span>
+            </div>
+            <div class="status-text">SECURE</div>
+        </div>
+    </div>
+
+    <script>
+        // --- Random Data Generators ---
+
+        function updateBars() {
+            setBar('cpu0', Math.floor(Math.random() * 60) + 10);
+            setBar('cpu1', Math.floor(Math.random() * 50) + 10);
+            setBar('mem', Math.floor(Math.random() * 30) + 40); // Base load
+        }
+
+        function setBar(id, val) {
+            document.getElementById(id + '-val').innerText = val + '%';
+            document.getElementById(id + '-bar').style.width = val + '%';
+        }
+
+        setInterval(updateBars, 2000);
+        updateBars();
+
+        // --- Network Graph ---
+        // Simple SVG polyline
+        const graphContainer = document.getElementById('net-graph');
+        let points = [];
+        const maxPoints = 20;
+
+        function updateNetwork() {
+            const up = (Math.random() * 5).toFixed(1);
+            const down = (Math.random() * 15).toFixed(1);
+
+            document.getElementById('net-up').innerText = up + ' MB/s';
+            document.getElementById('net-down').innerText = down + ' MB/s';
+
+            // Add new point (0-100 height)
+            const newVal = Math.random() * 100;
+            points.push(newVal);
+            if (points.length > maxPoints) points.shift();
+
+            drawGraph();
+        }
+
+        function drawGraph() {
+            const w = graphContainer.clientWidth;
+            const h = graphContainer.clientHeight;
+            if (!w || !h) return;
+
+            const step = w / (maxPoints - 1);
+
+            let svgContent = `<svg width="100%" height="100%"><polyline points="`;
+
+            points.forEach((p, i) => {
+                const x = i * step;
+                const y = h - (p / 100 * h); // Invert Y
+                svgContent += `${x},${y} `;
+            });
+
+            svgContent += `" style="fill:none;stroke:#0ff;stroke-width:2" /></svg>`;
+            graphContainer.innerHTML = svgContent;
+        }
+
+        setInterval(updateNetwork, 1000);
+
+        // Handle resize for graph
+        window.addEventListener('resize', drawGraph);
+
+        // --- Logs ---
+        const logs = [
+            "System initialization complete.",
+            "Connected to secured server [192.168.0.1].",
+            "Checking drive integrity... OK.",
+            "Firewall active. Ruleset updated.",
+            "Scanning for external devices... None found.",
+            "Memory optimization running.",
+            "Encryption keys targeting... Locked.",
+            "Data stream synchronized.",
+            "User authenticated: ADMIN.",
+            "Background service started: Watchdog."
+        ];
+
+        const logList = document.getElementById('log-list');
+
+        function addLog() {
+            const msg = logs[Math.floor(Math.random() * logs.length)];
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+
+            logList.prepend(div); // Add to top
+
+            // Keep only 10 items
+            if (logList.children.length > 10) {
+                logList.lastElementChild.remove();
+            }
+        }
+
+        setInterval(addLog, 2500);
+        addLog(); // Init
+
+    </script>
+</body>
+
+</html>
