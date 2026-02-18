@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Digital Business Card</title>
+    <!-- Google Fonts: Inter for clean typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0a0e17 0%, #1a253a 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --text-main: #ffffff;
+            --text-gold: #FFD700;
+            --card-width: 320px;
+            --card-height: 500px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            perspective: 1000px;
+            /* Essential for 3D flip */
+        }
+
+        /* Ambient Background Elements */
+        .ambient-light {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, rgba(10, 14, 23, 0) 70%);
+            top: -50px;
+            right: -50px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .ambient-light-2 {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(26, 37, 58, 0.3) 0%, rgba(10, 14, 23, 0) 70%);
+            bottom: -100px;
+            left: -100px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Card Container - The Wrapper */
+        .card-container {
+            width: var(--card-width);
+            height: var(--card-height);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* The Card - The Object to Rotate */
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Smooth, slight bounce */
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Face Styling (Common) */
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            /* Hide back of face */
+            backface-visibility: hidden;
+            border-radius: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            overflow: hidden;
+            /* For shine effect */
+        }
+
+        /* Shine Effect */
+        .face::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0) 100%);
+            transform: skewX(-25deg);
+            animation: shine 6s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shine {
+            0% {
+                left: -100%;
+            }
+
+            20% {
+                left: 200%;
+            }
+
+            100% {
+                left: 200%;
+            }
+        }
+
+        /* Front Face */
+        .front {
+            z-index: 2;
+            transform: rotateY(0deg);
+        }
+
+        /* Back Face */
+        .back {
+            transform: rotateY(180deg);
+        }
+
+        /* Profile Image */
+        .profile-img-wrapper {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            padding: 4px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 24px;
+        }
+
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Text Styling */
+        .name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #fff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title {
+            font-size: 14px;
+            color: var(--text-gold);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+            margin-bottom: 32px;
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        .title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 1px;
+            background: var(--text-gold);
+            opacity: 0.5;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-gold {
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: var(--text-gold);
+        }
+
+        .btn-gold:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--text-gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+        }
+
+        /* QR Code Area */
+        .qr-wrapper {
+            background: white;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .qr-img {
+            display: block;
+            width: 150px;
+            height: 150px;
+        }
+
+        .scan-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .back-logo {
+            margin-bottom: auto;
+            color: var(--text-gold);
+            font-size: 18px;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient-light"></div>
+    <div class="ambient-light-2"></div>
+
+    <div class="card-container">
+        <div class="card" id="businessCard">
+            <!-- Front Side -->
+            <div class="face front">
+                <div class="profile-img-wrapper">
+                    <!-- Placeholder image as requested -->
+                    <img src="https://i.pravatar.cc/300?img=11" alt="Profile" class="profile-img">
+                </div>
+
+                <h1 class="name">Hong Gil Dong</h1>
+                <div class="title">Executive Director / CEO</div>
+
+                <div class="btn-group">
+                    <a href="tel:010-9588-0328" class="btn">
+                        <i class="fas fa-phone"></i> Call
+                    </a>
+                    <a href="mailto:ceo@company.com" class="btn">
+                        <i class="fas fa-envelope"></i> Email
+                    </a>
+                    <a href="https://open.kakao.com/o/sXxxxx" class="btn" target="_blank">
+                        <i class="fas fa-comment"></i> KakaoTalk
+                    </a>
+                    <button class="btn btn-gold" id="btnShowQR">
+                        <i class="fas fa-qrcode"></i> Show QR Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Back Side -->
+            <div class="face back">
+                <div class="back-logo">EXECUTIVE</div>
+
+                <div class="scan-text">SCAN TO CONNECT</div>
+                <div class="qr-wrapper">
+                    <!-- QR Code from Mandalart URL as requested -->
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Mandalart" alt="QR Code"
+                        class="qr-img">
+                </div>
+
+                <button class="btn" id="btnClose" style="width: 100%;">
+                    <i class="fas fa-undo"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const card = document.getElementById('businessCard');
+        const btnShowQR = document.getElementById('btnShowQR');
+        const btnClose = document.getElementById('btnClose');
+
+        btnShowQR.addEventListener('click', () => {
+            card.classList.add('flipped');
+        });
+
+        btnClose.addEventListener('click', () => {
+            card.classList.remove('flipped');
+        });
+    </script>
+</body>
+
+</html>

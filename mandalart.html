@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandalart Chart - Strategic Planning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --border-color: #e0e0e0;
+            --text-color: #333333;
+            --core-bg: #1a237e; /* Dark Navy */
+            --core-text: #ffffff; /* White */
+            --core-text-accent: #ffd700; /* Gold */
+            --sub-core-bg: #e3f2fd; /* Light Blue */
+            --detail-bg: #ffffff; /* White */
+            --detail-bg-alt: #fafafa; /* Very Light Gray */
+            --hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        /* Main Grid: 3x3 Blocks */
+        .mandalart-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 16px;
+            background-color: transparent;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-width: 900px;
+            max-height: 900px;
+        }
+
+        /* Block: 3x3 Cells */
+        .block {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            background-color: var(--border-color);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .block:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+            z-index: 10;
+        }
+
+        /* Cell Styling */
+        .cell {
+            background-color: var(--detail-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.9rem;
+            font-weight: 400;
+            cursor: text;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            word-break: keep-all; /* Preserve Korean word breaks */
+            overflow-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .cell:focus {
+            background-color: #fff9c4 !important; /* Subtle highlight on focus */
+            z-index: 2;
+        }
+
+        /* Specific Cell Types based on ID/Class logic applied in JS */
+        
+        /* Core Center (Block 4, Cell 4) */
+        .cell.core-goal {
+            background-color: var(--core-bg);
+            color: var(--core-text);
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+        }
+        .cell.core-goal::selection {
+            background-color: var(--core-text-accent);
+            color: var(--core-bg);
+        }
+
+        /* Sub-Cores (Block 4 neighbors OR Center of other blocks) */
+        .cell.sub-core {
+            background-color: var(--sub-core-bg);
+            font-weight: 500;
+        }
+
+        /* Details */
+        .cell.detail {
+            background-color: var(--detail-bg);
+        }
+        
+        /* Placeholder styling */
+        .cell:empty:before {
+            content: attr(data-placeholder);
+            color: #ccc;
+            display: block; /* For Firefox */
+        }
+        
+        @media (max-width: 768px) {
+            .mandalart-container {
+                gap: 8px;
+            }
+            .block {
+                gap: 1px;
+                border-radius: 4px;
+            }
+            .cell {
+                font-size: 0.7rem;
+                padding: 4px;
+            }
+            .cell.core-goal {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <header>
+            <h1>Mandalart Plan</h1>
+            <p class="subtitle">Otani Shohei Style Goal Achievement Chart</p>
+        </header>
+
+        <div class="mandalart-container" id="mandalartGrid">
+            <!-- Grid generated by JS -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridContainer = document.getElementById('mandalartGrid');
+            const STORAGE_KEY = 'mandalart_data_v1';
+            
+            // Initialize data from local storage or empty object
+            let savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+
+            // Block structure: 0-8
+            // Cell structure: 0-8 within each block
+            
+            for (let b = 0; b < 9; b++) {
+                const blockDiv = document.createElement('div');
+                blockDiv.className = 'block';
+                blockDiv.id = `block-${b}`;
+
+                for (let c = 0; c < 9; c++) {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'cell';
+                    cellDiv.contentEditable = true;
+                    cellDiv.spellcheck = false;
+                    
+                    const cellId = `cell-${b}-${c}`;
+                    cellDiv.id = cellId;
+
+                    // Determine Cell Type and Style
+                    if (b === 4) {
+                        // Center Block
+                        if (c === 4) {
+                            cellDiv.classList.add('core-goal');
+                            cellDiv.dataset.placeholder = 'Main Goal';
+                        } else {
+                            cellDiv.classList.add('sub-core');
+                            cellDiv.dataset.placeholder = 'Sub Goal';
+                        }
+                    } else {
+                        // Outer Blocks
+                        if (c === 4) {
+                            cellDiv.classList.add('sub-core');
+                            cellDiv.dataset.placeholder = 'Sub Goal';
+                        } else {
+                            cellDiv.classList.add('detail');
+                            // cellDiv.dataset.placeholder = 'Task'; // Cleaner without placeholder for details?
+                        }
+                    }
+
+                    // Load saved content
+                    if (savedData[cellId]) {
+                        cellDiv.innerText = savedData[cellId];
+                    }
+
+                    // Add Event Listener for Saving
+                    cellDiv.addEventListener('input', function() {
+                        savedData[cellId] = this.innerText;
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+                        
+                        // Sync logic (optional but helpful? - sticking to requirement "click to edit" primarily, 
+                        // but updating visuals is good. Let's start with strict manual input as requested to avoid confusion.)
+                        // "User input must be saved immediately" - checked.
+                    });
+
+                    // Add Focus effects (CSS handles most, but maybe select all on empty?)
+                    
+                    blockDiv.appendChild(cellDiv);
+                }
+                gridContainer.appendChild(blockDiv);
+            }
+            
+            // Optional: Synchronization Logic (Hidden feature: editing Center Block Sub-goals updates Outer Block Centers)
+            // Implementation: Event delegation or specific listeners.
+            // Let's keep it manual as per request "direct modification".
+            // If the user types in Center Block (Block 4), Cell 0 -> Should it reflect in Block 0, Cell 4?
+            // The request says "contenteditable", implying manual control everywhere. I will stick to that.
+        });
+    </script>
+</body>
+</html>
