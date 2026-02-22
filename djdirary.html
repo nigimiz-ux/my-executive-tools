@@ -35,7 +35,6 @@
             overflow: hidden;
         }
 
-        /* --- Layout Grid --- */
         .app-container {
             display: grid;
             grid-template-columns: 1fr 60px;
@@ -47,7 +46,6 @@
             box-shadow: var(--shadow);
         }
 
-        /* --- Navigation --- */
         .nav-top {
             grid-column: 1 / -1;
             display: flex;
@@ -76,6 +74,7 @@
             top: 2px;
             box-shadow: 0 -2px 3px rgba(0, 0, 0, 0.05);
             font-size: 0.9rem;
+            flex-shrink: 0;
         }
 
         .month-tab:hover { transform: translateY(-3px); z-index: 10; }
@@ -86,40 +85,6 @@
             z-index: 20;
             transform: translateY(-2px) scale(1.05);
             border: none;
-        }
-
-        /* 로그인 영역 스타일 */
-        .auth-container {
-            margin-left: auto; /* 우측 끝으로 밀어내기 */
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding-right: 20px;
-            margin-bottom: 5px;
-        }
-
-        #userGreeting {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .auth-btn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 6px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: bold;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .auth-btn:hover {
-            background: #1a252f;
-            transform: translateY(-1px);
         }
 
         .nav-right {
@@ -169,22 +134,55 @@
             border-radius: 4px;
         }
 
-        /* --- Main Content Area --- */
         .main-content {
             grid-column: 1;
             grid-row: 2;
-            padding: 30px;
+            padding: 20px 30px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 20px;
         }
+
+        /* 변경된 로그인 바 스타일 (메인 컨텐츠 안으로 이동) */
+        .top-auth-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #userGreeting {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .auth-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .auth-btn:hover { background: #1a252f; transform: translateY(-1px); }
 
         .header-section {
             display: flex;
             gap: 20px;
             align-items: stretch;
-            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header-section { flex-direction: column; }
         }
 
         .date-display {
@@ -234,9 +232,7 @@
             gap: 20px;
         }
 
-        @media (max-width: 1024px) {
-            .diary-sections { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 1024px) { .diary-sections { grid-template-columns: 1fr; } }
 
         .section-card {
             background: #fff;
@@ -270,14 +266,13 @@
             border-radius: 4px;
             padding: 5px;
             transition: background 0.3s;
-            overflow: hidden;
         }
 
         .text-area:focus { background: var(--highlight-color); }
         .text-area:empty::before { content: attr(placeholder); color: #ccc; }
 
         .calendar-section {
-            margin-top: 20px;
+            margin-top: 10px;
             border: 1px solid var(--border-color);
             border-radius: 12px;
             background: #fff;
@@ -309,7 +304,6 @@
             flex-direction: column;
             color: var(--text-secondary);
             text-align: center;
-            position: relative;
         }
 
         iframe { width: 100%; height: 500px; border: none; border-radius: 8px; }
@@ -342,7 +336,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     
     <script>
-        // 임원님의 금고 열쇠
         const firebaseConfig = {
             apiKey: "AIzaSyDcQNHIUYSbJe8qnc4EqzRpGmQ4qufz7Ok",
             authDomain: "aje-executive-db.firebaseapp.com",
@@ -356,18 +349,21 @@
         const db = firebase.database();
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
-        
-        // 현재 로그인한 사용자 정보를 담을 변수
         let currentUser = null; 
     </script>
 
     <div class="app-container">
-        <nav class="nav-top" id="monthNav">
-            </nav>
+        <nav class="nav-top" id="monthNav"></nav>
 
         <nav class="nav-right" id="dayNav"></nav>
 
         <main class="main-content">
+            
+            <div class="top-auth-bar">
+                <span id="userGreeting">로그인 대기중... 🔒</span>
+                <button id="authBtn" class="auth-btn">Google 계정으로 로그인</button>
+            </div>
+
             <div class="header-section">
                 <div class="date-display">
                     <div class="year" id="displayYear">2026</div>
@@ -387,13 +383,11 @@
                     <div class="text-area" id="feelingArea" contenteditable="false"
                         placeholder="로그인이 필요합니다..."></div>
                 </div>
-
                 <div class="section-card">
                     <div class="section-title">2. 오늘의 할 일 (To-Do)</div>
                     <div class="text-area" id="todoArea" contenteditable="false"
                         placeholder="로그인이 필요합니다..."></div>
                 </div>
-
                 <div class="section-card">
                     <div class="section-title">3. 오늘을 마감하며 (Closing)</div>
                     <div class="text-area" id="closingArea" contenteditable="false"
@@ -409,12 +403,10 @@
                 <div id="calendarContainer">
                     <div class="calendar-placeholder">
                         <p>구글 캘린더가 연동되지 않았습니다.</p>
-                        <p style="font-size: 0.9rem; color: #888;">상단의 '⚙ 설정' 버튼을 눌러 캘린더 'Embed URL'을 입력해주세요.</p>
+                        <p style="font-size: 0.9rem; color: #888;">상단의 '⚙ 설정' 버튼을 눌러 캘린더 URL을 입력해주세요.</p>
                     </div>
                 </div>
             </div>
-
-            <p style="text-align: center; color: #aaa; margin-top: 20px; font-size: 0.8rem;">🔒 Private Cloud Sync Active.</p>
 
         </main>
     </div>
@@ -422,7 +414,7 @@
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <h3>Google Calendar 연동</h3>
-            <p>Google Calendar 설정 > 캘린더 통합 > '이 캘린더의 공개 URL' 또는 '소스코드(iframe)'에서 src 주소만 복사해서 아래에 붙여넣으세요.</p>
+            <p>Google Calendar 설정 > 캘린더 통합 > '이 캘린더의 공개 URL' 주소를 복사해서 아래에 붙여넣으세요.</p>
             <input type="text" id="calendarUrlInput" placeholder="https://calendar.google.com/calendar/embed?src=...">
             <button onclick="saveSettings()">저장 (Save)</button>
             <button onclick="closeSettings()" style="background:#ccc; color:#333; margin-left:10px;">취소</button>
@@ -430,20 +422,10 @@
     </div>
 
     <script>
-        // --- State Management ---
-        const state = {
-            currentYear: new Date().getFullYear(),
-            currentMonth: new Date().getMonth(), 
-            currentDay: new Date().getDate(),
-            lang: 'ko-KR'
-        };
-
+        const state = { currentYear: new Date().getFullYear(), currentMonth: new Date().getMonth(), currentDay: new Date().getDate() };
         const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-        function getDaysInMonth(year, month) {
-            return new Date(year, month + 1, 0).getDate();
-        }
+        function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
 
-        // --- DOM Elements ---
         const els = {
             monthNav: document.getElementById('monthNav'),
             dayNav: document.getElementById('dayNav'),
@@ -461,48 +443,40 @@
             modal: document.getElementById('settingsModal')
         };
 
-        // --- Initialization ---
         function init() {
             renderNav();
             updateDateView();
             loadCalendar();
 
-            // 타이핑 자동 저장 이벤트
             Object.values(els.inputs).forEach(input => {
                 input.addEventListener('input', debounceSave);
                 input.addEventListener('blur', saveData);
             });
 
-            // 🌟 로그인 상태 감지 옵저버 (가장 중요) 🌟
             auth.onAuthStateChanged((user) => {
                 const greetingEl = document.getElementById('userGreeting');
                 const authBtn = document.getElementById('authBtn');
 
                 if (user) {
-                    // 로그인 성공 시
                     currentUser = user;
                     greetingEl.textContent = `반갑습니다, ${user.displayName}님 🎩`;
                     authBtn.textContent = '로그아웃';
                     authBtn.onclick = () => auth.signOut();
                     
-                    // 입력창 활성화 및 데이터 로드
                     toggleInputs(true);
                     loadData();
                 } else {
-                    // 로그아웃 상태
                     currentUser = null;
                     greetingEl.textContent = '데이터를 보려면 로그인하세요 🔒';
                     authBtn.textContent = 'Google 계정으로 로그인';
-                    authBtn.onclick = () => auth.signInWithPopup(provider);
+                    authBtn.onclick = () => auth.signInWithPopup(provider).catch(error => console.error("로그인 에러:", error));
                     
-                    // 화면 초기화 및 입력창 잠금
                     clearInputs();
                     toggleInputs(false);
                 }
             });
         }
 
-        // --- Auth UI Helper ---
         function toggleInputs(enabled) {
             Object.values(els.inputs).forEach(el => {
                 el.contentEditable = enabled;
@@ -512,18 +486,13 @@
             });
         }
 
-        function clearInputs() {
-            Object.values(els.inputs).forEach(el => el.innerHTML = '');
-        }
+        function clearInputs() { Object.values(els.inputs).forEach(el => el.innerHTML = ''); }
 
-        // --- Navigation Rendering ---
         const monthColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#ff9aa2', '#e2f0cb', '#b5ead7', '#c7ceea', '#fad2e1', '#f2aa4c', '#f0f2f5'];
         const postItColors = ['#fff740', '#ff7eb9', '#7afcff', '#feff9c', '#fff655'];
 
         function renderNav() {
             els.monthNav.innerHTML = '';
-            
-            // 월 버튼 생성
             months.forEach((m, idx) => {
                 const btn = document.createElement('div');
                 btn.className = `month-tab ${idx === state.currentMonth ? 'active' : ''}`;
@@ -534,23 +503,11 @@
                     state.currentMonth = idx;
                     const maxDays = getDaysInMonth(state.currentYear, state.currentMonth);
                     if (state.currentDay > maxDays) state.currentDay = maxDays;
-                    renderNav(); 
-                    updateDateView();
-                    loadData();
+                    renderNav(); updateDateView(); loadData();
                 };
                 els.monthNav.appendChild(btn);
             });
 
-            // 🔑 우측 상단 로그인 컨테이너 동적 추가
-            const authDiv = document.createElement('div');
-            authDiv.className = 'auth-container';
-            authDiv.innerHTML = `
-                <span id="userGreeting">로그인 대기중...</span>
-                <button id="authBtn" class="auth-btn">Google 로그인</button>
-            `;
-            els.monthNav.appendChild(authDiv);
-
-            // 일(Day) 버튼 생성
             els.dayNav.innerHTML = '';
             const daysInMonth = getDaysInMonth(state.currentYear, state.currentMonth);
 
@@ -568,9 +525,7 @@
 
                 btn.onclick = () => {
                     state.currentDay = i;
-                    renderNav(); 
-                    updateDateView();
-                    loadData();
+                    renderNav(); updateDateView(); loadData();
                 };
                 els.dayNav.appendChild(btn);
             }
@@ -591,42 +546,32 @@
             els.displayDayName.textContent = dayNames[dateObj.getDay()];
         }
 
-        // --- Firebase Data Logic (개인화 룸 적용) ---
         function getFirebasePath() {
-            if (!currentUser) return null; // 로그인 안 되어있으면 경로 없음
-            
+            if (!currentUser) return null;
             const y = state.currentYear;
             const m = String(state.currentMonth + 1).padStart(2, '0');
             const d = String(state.currentDay).padStart(2, '0');
-            
-            // 핵심: 'users/사용자고유ID/diary/날짜' 형태로 경로를 바꿈
             return `users/${currentUser.uid}/diary/${y}-${m}-${d}`;
         }
 
         let timeoutId;
-        function debounceSave() {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(saveData, 500);
-        }
+        function debounceSave() { clearTimeout(timeoutId); timeoutId = setTimeout(saveData, 500); }
 
         function saveData() {
             const path = getFirebasePath();
-            if (!path) return; // 로그인 안 되어있으면 저장 안 함
-
+            if (!path) return;
             const data = {
                 special: els.inputs.special.innerHTML,
                 feeling: els.inputs.feeling.innerHTML,
                 todo: els.inputs.todo.innerHTML,
                 closing: els.inputs.closing.innerHTML
             };
-            
-            db.ref(path).set(data).catch((error) => console.error("저장 실패:", error));
+            db.ref(path).set(data).catch(error => console.error("저장 실패:", error));
         }
 
         function loadData() {
             const path = getFirebasePath();
             if (!path) return;
-
             Object.values(els.inputs).forEach(el => el.style.opacity = '0.5');
 
             db.ref(path).once('value').then((snapshot) => {
@@ -636,17 +581,14 @@
                     els.inputs.feeling.innerHTML = data.feeling || '';
                     els.inputs.todo.innerHTML = data.todo || '';
                     els.inputs.closing.innerHTML = data.closing || '';
-                } else {
-                    clearInputs();
-                }
+                } else { clearInputs(); }
                 Object.values(els.inputs).forEach(el => el.style.opacity = '1');
-            }).catch((error) => {
+            }).catch(error => {
                 console.error("불러오기 실패:", error);
                 Object.values(els.inputs).forEach(el => el.style.opacity = '1');
             });
         }
 
-        // --- Google Calendar Logic ---
         function openSettings() { els.modal.style.display = 'flex'; const currentUrl = localStorage.getItem('calendar_url'); if (currentUrl) els.calendarInput.value = currentUrl; }
         function closeSettings() { els.modal.style.display = 'none'; }
         function saveSettings() { const url = els.calendarInput.value.trim(); if (url) { localStorage.setItem('calendar_url', url); loadCalendar(); closeSettings(); } }
@@ -659,13 +601,9 @@
                 els.calendarContainer.innerHTML = `<iframe src="${cleanUrl}" style="border: 0" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>`;
             }
         }
-
         window.onclick = function (event) { if (event.target == els.modal) closeSettings(); }
 
-        // 앱 실행
         init();
-
     </script>
 </body>
-
 </html>
