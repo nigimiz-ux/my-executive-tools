@@ -88,6 +88,40 @@
             border: none;
         }
 
+        /* 로그인 영역 스타일 */
+        .auth-container {
+            margin-left: auto; /* 우측 끝으로 밀어내기 */
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-right: 20px;
+            margin-bottom: 5px;
+        }
+
+        #userGreeting {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .auth-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .auth-btn:hover {
+            background: #1a252f;
+            transform: translateY(-1px);
+        }
+
         .nav-right {
             grid-column: 2;
             grid-row: 2;
@@ -305,8 +339,10 @@
 <body>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
     <script>
-        // 임원님의 금고 열쇠를 앱 시작 전에 장착!
+        // 임원님의 금고 열쇠
         const firebaseConfig = {
             apiKey: "AIzaSyDcQNHIUYSbJe8qnc4EqzRpGmQ4qufz7Ok",
             authDomain: "aje-executive-db.firebaseapp.com",
@@ -318,10 +354,16 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        // 현재 로그인한 사용자 정보를 담을 변수
+        let currentUser = null; 
     </script>
 
     <div class="app-container">
-        <nav class="nav-top" id="monthNav"></nav>
+        <nav class="nav-top" id="monthNav">
+            </nav>
 
         <nav class="nav-right" id="dayNav"></nav>
 
@@ -334,28 +376,28 @@
                 </div>
                 <div class="special-note-container">
                     <div class="special-note-label">Today's Highlight / 특이사항</div>
-                    <div class="special-note-input" id="specialNote" contenteditable="true"
-                        placeholder="오늘의 가장 중요한 일이나 기억할 점을 기록하세요..."></div>
+                    <div class="special-note-input" id="specialNote" contenteditable="false"
+                        placeholder="로그인이 필요합니다..."></div>
                 </div>
             </div>
 
             <div class="diary-sections">
                 <div class="section-card">
                     <div class="section-title">1. 오늘의 느낌 (Feeling)</div>
-                    <div class="text-area" id="feelingArea" contenteditable="true"
-                        placeholder="오늘의 기분은 어떠셨나요?&#10;5줄 이상 자유롭게 적어보세요."></div>
+                    <div class="text-area" id="feelingArea" contenteditable="false"
+                        placeholder="로그인이 필요합니다..."></div>
                 </div>
 
                 <div class="section-card">
                     <div class="section-title">2. 오늘의 할 일 (To-Do)</div>
-                    <div class="text-area" id="todoArea" contenteditable="true"
-                        placeholder="1. &#10;2. &#10;3. &#10;중요한 업무나 목표를 정리해보세요."></div>
+                    <div class="text-area" id="todoArea" contenteditable="false"
+                        placeholder="로그인이 필요합니다..."></div>
                 </div>
 
                 <div class="section-card">
                     <div class="section-title">3. 오늘을 마감하며 (Closing)</div>
-                    <div class="text-area" id="closingArea" contenteditable="true"
-                        placeholder="오늘 하루를 돌아보며 아쉬웠던 점이나 감사한 점을 기록하세요."></div>
+                    <div class="text-area" id="closingArea" contenteditable="false"
+                        placeholder="로그인이 필요합니다..."></div>
                 </div>
             </div>
 
@@ -372,7 +414,7 @@
                 </div>
             </div>
 
-            <p style="text-align: center; color: #aaa; margin-top: 20px; font-size: 0.8rem;">Changes are saved automatically to Firebase Cloud.</p>
+            <p style="text-align: center; color: #aaa; margin-top: 20px; font-size: 0.8rem;">🔒 Private Cloud Sync Active.</p>
 
         </main>
     </div>
@@ -423,14 +465,55 @@
         function init() {
             renderNav();
             updateDateView();
-            loadData();
             loadCalendar();
 
-            // 타이핑이 끝날 때마다 서버로 전송 (Debounce 적용)
+            // 타이핑 자동 저장 이벤트
             Object.values(els.inputs).forEach(input => {
                 input.addEventListener('input', debounceSave);
-                input.addEventListener('blur', saveData); // 포커스를 잃을 때 즉시 저장
+                input.addEventListener('blur', saveData);
             });
+
+            // 🌟 로그인 상태 감지 옵저버 (가장 중요) 🌟
+            auth.onAuthStateChanged((user) => {
+                const greetingEl = document.getElementById('userGreeting');
+                const authBtn = document.getElementById('authBtn');
+
+                if (user) {
+                    // 로그인 성공 시
+                    currentUser = user;
+                    greetingEl.textContent = `반갑습니다, ${user.displayName}님 🎩`;
+                    authBtn.textContent = '로그아웃';
+                    authBtn.onclick = () => auth.signOut();
+                    
+                    // 입력창 활성화 및 데이터 로드
+                    toggleInputs(true);
+                    loadData();
+                } else {
+                    // 로그아웃 상태
+                    currentUser = null;
+                    greetingEl.textContent = '데이터를 보려면 로그인하세요 🔒';
+                    authBtn.textContent = 'Google 계정으로 로그인';
+                    authBtn.onclick = () => auth.signInWithPopup(provider);
+                    
+                    // 화면 초기화 및 입력창 잠금
+                    clearInputs();
+                    toggleInputs(false);
+                }
+            });
+        }
+
+        // --- Auth UI Helper ---
+        function toggleInputs(enabled) {
+            Object.values(els.inputs).forEach(el => {
+                el.contentEditable = enabled;
+                el.style.opacity = enabled ? '1' : '0.5';
+                if (!enabled) el.setAttribute('placeholder', '로그인이 필요합니다...');
+                else el.setAttribute('placeholder', '자유롭게 기록하세요...');
+            });
+        }
+
+        function clearInputs() {
+            Object.values(els.inputs).forEach(el => el.innerHTML = '');
         }
 
         // --- Navigation Rendering ---
@@ -439,6 +522,8 @@
 
         function renderNav() {
             els.monthNav.innerHTML = '';
+            
+            // 월 버튼 생성
             months.forEach((m, idx) => {
                 const btn = document.createElement('div');
                 btn.className = `month-tab ${idx === state.currentMonth ? 'active' : ''}`;
@@ -456,6 +541,16 @@
                 els.monthNav.appendChild(btn);
             });
 
+            // 🔑 우측 상단 로그인 컨테이너 동적 추가
+            const authDiv = document.createElement('div');
+            authDiv.className = 'auth-container';
+            authDiv.innerHTML = `
+                <span id="userGreeting">로그인 대기중...</span>
+                <button id="authBtn" class="auth-btn">Google 로그인</button>
+            `;
+            els.monthNav.appendChild(authDiv);
+
+            // 일(Day) 버튼 생성
             els.dayNav.innerHTML = '';
             const daysInMonth = getDaysInMonth(state.currentYear, state.currentMonth);
 
@@ -496,16 +591,19 @@
             els.displayDayName.textContent = dayNames[dateObj.getDay()];
         }
 
-        // --- Firebase Data Logic ---
+        // --- Firebase Data Logic (개인화 룸 적용) ---
         function getFirebasePath() {
+            if (!currentUser) return null; // 로그인 안 되어있으면 경로 없음
+            
             const y = state.currentYear;
             const m = String(state.currentMonth + 1).padStart(2, '0');
             const d = String(state.currentDay).padStart(2, '0');
-            return `diary/${y}-${m}-${d}`;
+            
+            // 핵심: 'users/사용자고유ID/diary/날짜' 형태로 경로를 바꿈
+            return `users/${currentUser.uid}/diary/${y}-${m}-${d}`;
         }
 
         let timeoutId;
-        // 글자를 칠 때마다 서버가 터지지 않게 0.5초 대기 후 저장하는 타이머 (Debounce)
         function debounceSave() {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(saveData, 500);
@@ -513,6 +611,8 @@
 
         function saveData() {
             const path = getFirebasePath();
+            if (!path) return; // 로그인 안 되어있으면 저장 안 함
+
             const data = {
                 special: els.inputs.special.innerHTML,
                 feeling: els.inputs.feeling.innerHTML,
@@ -520,21 +620,15 @@
                 closing: els.inputs.closing.innerHTML
             };
             
-            // Firebase에 실시간 저장 (set)
-            db.ref(path).set(data).then(() => {
-                console.log("Firebase 저장 완료:", path);
-            }).catch((error) => {
-                console.error("저장 실패:", error);
-            });
+            db.ref(path).set(data).catch((error) => console.error("저장 실패:", error));
         }
 
         function loadData() {
             const path = getFirebasePath();
-            
-            // 로딩 중일 때 살짝 투명하게 처리 (UX)
+            if (!path) return;
+
             Object.values(els.inputs).forEach(el => el.style.opacity = '0.5');
 
-            // Firebase에서 실시간 데이터 불러오기 (get/once)
             db.ref(path).once('value').then((snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -543,8 +637,7 @@
                     els.inputs.todo.innerHTML = data.todo || '';
                     els.inputs.closing.innerHTML = data.closing || '';
                 } else {
-                    // 데이터가 없으면 빈칸으로 초기화
-                    Object.values(els.inputs).forEach(el => el.innerHTML = '');
+                    clearInputs();
                 }
                 Object.values(els.inputs).forEach(el => el.style.opacity = '1');
             }).catch((error) => {
@@ -554,44 +647,20 @@
         }
 
         // --- Google Calendar Logic ---
-        function openSettings() {
-            els.modal.style.display = 'flex';
-            const currentUrl = localStorage.getItem('calendar_url');
-            if (currentUrl) els.calendarInput.value = currentUrl;
-        }
-
-        function closeSettings() {
-            els.modal.style.display = 'none';
-        }
-
-        function saveSettings() {
-            const url = els.calendarInput.value.trim();
-            if (url) {
-                localStorage.setItem('calendar_url', url);
-                loadCalendar();
-                closeSettings();
-            }
-        }
-
+        function openSettings() { els.modal.style.display = 'flex'; const currentUrl = localStorage.getItem('calendar_url'); if (currentUrl) els.calendarInput.value = currentUrl; }
+        function closeSettings() { els.modal.style.display = 'none'; }
+        function saveSettings() { const url = els.calendarInput.value.trim(); if (url) { localStorage.setItem('calendar_url', url); loadCalendar(); closeSettings(); } }
         function loadCalendar() {
             const defaultUrl = 'https://calendar.google.com/calendar/embed?src=nigimiz%40gmail.com&ctz=Asia%2FSeoul';
             const url = localStorage.getItem('calendar_url') || defaultUrl;
-
             if (url) {
                 let cleanUrl = url;
-                if (url.includes('src="')) {
-                    const match = url.match(/src="([^"]+)"/);
-                    if (match) cleanUrl = match[1];
-                }
+                if (url.includes('src="')) { const match = url.match(/src="([^"]+)"/); if (match) cleanUrl = match[1]; }
                 els.calendarContainer.innerHTML = `<iframe src="${cleanUrl}" style="border: 0" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>`;
             }
         }
 
-        window.onclick = function (event) {
-            if (event.target == els.modal) {
-                closeSettings();
-            }
-        }
+        window.onclick = function (event) { if (event.target == els.modal) closeSettings(); }
 
         // 앱 실행
         init();
