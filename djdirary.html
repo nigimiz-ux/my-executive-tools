@@ -12,7 +12,7 @@
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
             --text-primary: #333333;
-            --text-secondary: #666666;
+            `1 --text-secondary: #666666;
             --accent-color: #2c3e50;
             --highlight-color: #e8f0fe;
             --border-color: #e0e0e0;
@@ -156,11 +156,13 @@
         .main-content {
             grid-column: 1;
             grid-row: 2;
-            padding: 20px 30px;
+            /* 💡 위쪽 여백을 40px로 팍 늘려서 천장과 강제 격리 */
+            padding: 40px 30px 30px 30px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 20px;
+        }
         }
 
         /* 변경된 로그인 바 스타일 (메인 컨텐츠 안으로 이동) */
@@ -169,12 +171,13 @@
             justify-content: flex-end;
             align-items: center;
             gap: 15px;
-            padding-bottom: 15px;
-            margin-bottom: 10px;
+            padding-bottom: 10px;
             border-bottom: 1px solid var(--border-color);
-            /* 💡 공간이 좁아지면 자연스럽게 아래로 떨어지도록 유연성 부여 */
-            flex-wrap: wrap;
+            /* 💡 위에서부터 20px 무조건 떨어지라고 강제 명령 */
+            margin-top: 20px !important;
             min-height: 40px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
         }
 
         #userGreeting {
