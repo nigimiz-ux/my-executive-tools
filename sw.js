@@ -1,8 +1,14 @@
-// 서비스 워커 설치 확인용 (빈 껍데기)
+// 새로운 버전이 올라오면 즉시 낡은 일꾼을 해고하고 새 일꾼 투입
 self.addEventListener('install', (e) => {
-    console.log('[Service Worker] 설치 완료! 이제 앱으로 설치할 수 있습니다.');
+    self.skipWaiting();
+    console.log('[Service Worker] 설치 완료!');
 });
 
+self.addEventListener('activate', (e) => {
+    console.log('[Service Worker] 활성화 완료!');
+});
+
+// 💡 날씨 API 등 모든 인터넷 통신을 방해하지 않고 그대로 통과시킴 (하이패스)
 self.addEventListener('fetch', (e) => {
-    // 나중에 인터넷이 끊겨도 작동하게(오프라인 모드) 만들 때 여기에 코드를 짭니다.
+    e.respondWith(fetch(e.request));
 });
