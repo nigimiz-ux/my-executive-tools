@@ -511,15 +511,13 @@
                     currentUser = null;
                     greetingEl.textContent = '데이터를 보려면 로그인하세요 🔒';
                     authBtn.textContent = 'Google 계정으로 로그인';
-                    // 💡 팝업 대신 화면 이동(Redirect) 방식으로 변경
-                    authBtn.onclick = () => {
-                        authBtn.textContent = '로그인 화면으로 이동 중...';
-                        auth.signInWithRedirect(provider);
-                    };
+                    // 💡 안정적인 팝업 방식으로 복구
+                    authBtn.onclick = () => auth.signInWithPopup(provider).catch(error => console.error("로그인 에러:", error));
+                };
 
-                    clearInputs();
-                    toggleInputs(false);
-                }
+                clearInputs();
+                toggleInputs(false);
+            }
             });
         }
 
