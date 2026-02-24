@@ -495,9 +495,11 @@
                 input.addEventListener('blur', saveData);
             });
 
+            // 💡 로그인 상태 감지 및 버튼 동작 처리 (오타 수정 완벽 버전)
             auth.onAuthStateChanged((user) => {
                 const greetingEl = document.getElementById('userGreeting');
                 const authBtn = document.getElementById('authBtn');
+                const exportBtn = document.getElementById('exportBtn'); // 엑셀 버튼 추가됨
 
                 if (user) {
                     currentUser = user;
@@ -505,19 +507,23 @@
                     authBtn.textContent = '로그아웃';
                     authBtn.onclick = () => auth.signOut();
 
+                    if (exportBtn) exportBtn.style.display = 'inline-block'; // 엑셀 버튼 보이기
+
                     toggleInputs(true);
                     loadData();
                 } else {
                     currentUser = null;
                     greetingEl.textContent = '데이터를 보려면 로그인하세요 🔒';
                     authBtn.textContent = 'Google 계정으로 로그인';
-                    // 💡 안정적인 팝업 방식으로 복구
-                    authBtn.onclick = () => auth.signInWithPopup(provider).catch(error => console.error("로그인 에러:", error));
-                };
 
-                clearInputs();
-                toggleInputs(false);
-            }
+                    // 💡 안정적인 팝업 방식으로 복구된 부분
+                    authBtn.onclick = () => auth.signInWithPopup(provider).catch(error => console.error("로그인 에러:", error));
+
+                    if (exportBtn) exportBtn.style.display = 'none'; // 엑셀 버튼 숨기기
+
+                    clearInputs();
+                    toggleInputs(false);
+                }
             });
         }
 
