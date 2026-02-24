@@ -414,6 +414,8 @@
             <main class="main-content">
                 <div class="top-auth-bar">
                     <span id="userGreeting">로그인 대기중... 🔒</span>
+                    <button id="exportBtn" class="auth-btn" style="background-color: #27ae60; display: none;"
+                        onclick="exportToCSV()">📊 Excel 다운로드</button>
                     <button id="authBtn" class="auth-btn">Google 계정으로 로그인</button>
                 </div>
 
@@ -632,16 +634,74 @@
         }
 
         function loadCalendar() {
-            const defaultUrl = 'https://calendar.google.com/calendar/embed?src=nigimiz%40gmail.com&ctz=Asia%2FSeoul';
-            const url = localStorage.getItem('calendar_url') || defaultUrl;
-            if (url) {
-                let cleanUrl = url;
-                if (url.includes('src="')) { const match = url.match(/src="([^"]+)"/); if (match) cleanUrl = match[1]; }
-                document.getElementById('calendarContainer').innerHTML = `<iframe src="${cleanUrl}" style="border: 0" width="100%" height="500px" frameborder="0" scrolling="no"></iframe>`;
-            }
+            // ... 생략 ...
         }
 
         init();
+
+        // 💡 [추가] 엑셀(CSV)로 데이터 내보내기 마법 💡
+        function exportToCSV() {
+            if (!currentUser) {
+                alert("로그인 후 이용 가능합니다.");
+                return;
+            }
+
+            const path = `users/${currentUser.uid}/diary`;
+
+            // 파이어베이스에서 내 데이터 전부 긁어오기
+            db.ref(path).once('value').then((snapshot) => {
+                const data = snapshot.val();
+
+                if (!data) {
+                    alert("아직 작성된 일기가 없습니다!");
+                    return;
+                }
+
+                // 엑셀에서 한글이 깨지지 않게 해주는 마법의 주문 (BOM)
+                let csvContent = "\uFEFF";
+                // 엑셀 첫 번째 줄 (헤더)
+                csvContent += "날짜,특이사항,오늘의 느낌,오늘의 할 일,오늘을 마감하며\n";
+
+                // 날짜순으로 정렬해서 줄바꿈 지키며 표로 만들기
+                const dates = Object.keys(data).sort();
+                dates.forEach(date => {
+                    const entry = data[date];
+                    // 엑셀 칸이 안 밀리도록 내용의 엔터와 따옴표를 안전하게 포장
+                    const special = `"${(entry.special || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
+                    const feeling = `"${(entry.feeling || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
+                    const todo = `"${(entry.todo || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
+                    const closing = `"${(entry.closing || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
+
+                    csvContent += `${date},${special},${feeling},${todo},${closing}\n`;
+                });
+
+                // 완성된 표를 CSV 파일로 강제 다운로드 시키기
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "Strategic_Diary_Backup.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            }).catch((error) => {
+                console.error("엑셀 추출 실패:", error);
+                alert("데이터를 불러오는 중 오류가 발생했습니다.");
+            });
+        }
+
+        // 로그인이 성공했을 때 엑셀 버튼이 보이게 하기
+        auth.onAuthStateChanged((user) => {
+            const exportBtn = document.getElementById('exportBtn');
+            if (user) {
+                if (exportBtn) exportBtn.style.display = 'inline-block';
+            } else {
+                if (exportBtn) exportBtn.style.display = 'none';
+            }
+        });
+
     </script>
     <script>
         if ('serviceWorker' in navigator) {
