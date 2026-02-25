@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+ 
 
 <head>
     <meta charset="UTF-8">
@@ -8,10 +9,10 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <link rel="apple-touch-icon" href="icon.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
         rel="stylesheet">
     <style>
-        /* 기존 CSS 뼈대 동일 유지 */
         :root {
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
@@ -229,7 +230,6 @@
             margin-top: 5px;
         }
 
-        /* 💡 1. 날씨 위젯을 위한 새로운 CSS */
         .weather-widget {
             margin-top: 15px;
             background: rgba(0, 0, 0, 0.2);
@@ -383,7 +383,7 @@
             font-size: 0.8rem;
         }
 
-        /* 📰 BBC 뉴스 위젯 스타일 (다이어리용 밝은 테마) */
+        /* BBC 뉴스 위젯 스타일 */
         .news-list {
             display: flex;
             flex-direction: column;
@@ -433,12 +433,13 @@
         }
     </style>
 </head>
+ 
 
 <body>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
+     
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDcQNHIUYSbJe8qnc4EqzRpGmQ4qufz7Ok",
@@ -455,10 +456,9 @@
         const provider = new firebase.auth.GoogleAuthProvider();
         let currentUser = null; 
     </script>
-
+     
     <div class="app-container">
         <nav class="nav-top" id="monthNav"></nav>
-
         <div class="content-wrapper">
             <main class="main-content">
                 <div class="top-auth-bar">
@@ -467,7 +467,7 @@
                         onclick="exportToCSV()">📊 Excel 다운로드</button>
                     <button id="authBtn" class="auth-btn">Google 계정으로 로그인</button>
                 </div>
-
+                 
                 <div class="header-section">
                     <div class="date-display">
                         <div class="year" id="displayYear">2026</div>
@@ -481,7 +481,7 @@
                             placeholder="로그인이 필요합니다..."></div>
                     </div>
                 </div>
-
+                 
                 <div class="diary-sections">
                     <div class="section-card">
                         <div class="section-title">1. 오늘의 느낌 (Feeling)</div>
@@ -498,14 +498,14 @@
                         </div>
                     </div>
                 </div>
-
+                 
                 <div class="calendar-section">
                     <div class="calendar-header">
                         <span>Google Calendar</span>
                     </div>
                     <div id="calendarContainer"></div>
                 </div>
-
+                 
                 <div class="section-card" style="margin-top: 20px;">
                     <h3
                         style="display: flex; justify-content: space-between; align-items: center; margin:0; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
@@ -517,21 +517,12 @@
                         <p style="color: #7f8c8d; text-align: center; padding: 20px;">뉴스를 불러오는 중입니다... 📡</p>
                     </div>
                 </div>
-
-            </main>  
+                 
+            </main>
             <nav class="nav-right" id="dayNav"></nav>
         </div>
     </div>
-    <div class="section-card">
-        <h3 style="display: flex; justify-content: space-between; align-items: center;">
-            <span>🌍 Today's Global News</span>
-            <span style="font-size: 0.75rem; font-weight: normal; color: #7f8c8d; cursor: pointer;"
-                onclick="fetchBBCNews()">🔄 새로고침</span>
-        </h3>
-        <div id="newsContainer" class="news-list">
-            <p style="color: #7f8c8d; text-align: center; padding: 20px;">뉴스를 불러오는 중입니다... 📡</p>
-        </div>
-    </div>
+
     <script>
         const state = { currentYear: new Date().getFullYear(), currentMonth: new Date().getMonth(), currentDay: new Date().getDate() };
         const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
@@ -543,7 +534,7 @@
             displayYear: document.getElementById('displayYear'),
             displayDate: document.getElementById('displayDate'),
             displayDayName: document.getElementById('displayDayName'),
-            weatherDisplay: document.getElementById('weatherDisplay'), // 💡 날씨 표시기 연결
+            weatherDisplay: document.getElementById('weatherDisplay'),
             inputs: {
                 special: document.getElementById('specialNote'),
                 feeling: document.getElementById('feelingArea'),
@@ -556,78 +547,56 @@
             renderNav();
             updateDateView();
             loadCalendar();
-
-            // 💡 3. 다이어리가 켜지면 날씨를 가져와라!
             fetchWeather();
+            fetchBBCNews(); // 다이어리 켜질때 뉴스 가져오기
 
             Object.values(els.inputs).forEach(input => {
                 input.addEventListener('input', debounceSave);
                 input.addEventListener('blur', saveData);
             });
 
-            // 💡 로그인 상태 감지 및 버튼 동작 처리 (오타 수정 완벽 버전)
             auth.onAuthStateChanged((user) => {
                 const greetingEl = document.getElementById('userGreeting');
                 const authBtn = document.getElementById('authBtn');
-                const exportBtn = document.getElementById('exportBtn'); // 엑셀 버튼 추가됨
+                const exportBtn = document.getElementById('exportBtn');
 
                 if (user) {
                     currentUser = user;
                     greetingEl.textContent = `반갑습니다, ${user.displayName}님 🎩`;
                     authBtn.textContent = '로그아웃';
                     authBtn.onclick = () => auth.signOut();
-
-                    if (exportBtn) exportBtn.style.display = 'inline-block'; // 엑셀 버튼 보이기
-
+                    if (exportBtn) exportBtn.style.display = 'inline-block';
                     toggleInputs(true);
                     loadData();
                 } else {
                     currentUser = null;
                     greetingEl.textContent = '데이터를 보려면 로그인하세요 🔒';
                     authBtn.textContent = 'Google 계정으로 로그인';
-
-                    // 💡 안정적인 팝업 방식으로 복구된 부분
                     authBtn.onclick = () => auth.signInWithPopup(provider).catch(error => console.error("로그인 에러:", error));
-
-                    if (exportBtn) exportBtn.style.display = 'none'; // 엑셀 버튼 숨기기
-
+                    if (exportBtn) exportBtn.style.display = 'none';
                     clearInputs();
                     toggleInputs(false);
                 }
             });
         }
 
-        // 💡 4. 대망의 API 연동 함수 (JSON 활용)
         async function fetchWeather() {
             try {
-                // 오픈 API 서버에 날씨 요청 (대한민국 경산/대구 인근 좌표 기준)
                 const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.82&longitude=128.73&current_weather=true');
-
-                // 받아온 JSON(제이슨) 공용어 데이터를 자바스크립트가 알아먹는 형태로 번역!
                 const data = await response.json();
-
-                // 번역된 데이터 안에서 온도와 날씨 코드만 쏙 빼오기
                 const temp = data.current_weather.temperature;
                 const weatherCode = data.current_weather.weathercode;
-
-                // 날씨 코드에 맞춰 이모티콘 씌우기
                 let icon = '☁️';
-                if (weatherCode === 0 || weatherCode === 1) icon = '☀️'; // 맑음
-                else if (weatherCode === 2 || weatherCode === 3) icon = '⛅'; // 구름조금
-                else if (weatherCode >= 50 && weatherCode <= 69) icon = '🌧️'; // 비
-                else if (weatherCode >= 70 && weatherCode <= 79) icon = '❄️'; // 눈
-
-                // 다이어리 화면에 뿌리기
+                if (weatherCode === 0 || weatherCode === 1) icon = '☀️';
+                else if (weatherCode === 2 || weatherCode === 3) icon = '⛅';
+                else if (weatherCode >= 50 && weatherCode <= 69) icon = '🌧️';
+                else if (weatherCode >= 70 && weatherCode <= 79) icon = '❄️';
                 els.weatherDisplay.textContent = `${icon} 경산: ${temp}°C`;
-
             } catch (error) {
-                // 인터넷이 끊겼거나 서버가 죽었을 때
                 els.weatherDisplay.textContent = '☁️ 날씨 정보 없음';
-                console.error("날씨 API 에러:", error);
             }
         }
 
-        /* 이하 기존 코드 동일 (생략 없이 작동하도록 유지) */
         function toggleInputs(enabled) {
             Object.values(els.inputs).forEach(el => {
                 el.contentEditable = enabled;
@@ -652,7 +621,6 @@
                 btn.onclick = () => { state.currentMonth = idx; const maxDays = getDaysInMonth(state.currentYear, state.currentMonth); if (state.currentDay > maxDays) state.currentDay = maxDays; renderNav(); updateDateView(); loadData(); };
                 els.monthNav.appendChild(btn);
             });
-
             els.dayNav.innerHTML = '';
             const daysInMonth = getDaysInMonth(state.currentYear, state.currentMonth);
             for (let i = 1; i <= daysInMonth; i++) {
@@ -707,11 +675,10 @@
             }).catch(error => { console.error("불러오기 실패:", error); Object.values(els.inputs).forEach(el => el.style.opacity = '1'); });
         }
 
-        // 💡 잃어버린 캘린더 기능 완벽 복구
+        // 💡 캘린더 기능 
         function loadCalendar() {
             const container = document.getElementById('calendarContainer');
             const savedUrl = localStorage.getItem('calendarUrl');
-
             if (savedUrl) {
                 container.innerHTML = `<iframe src="${savedUrl}"></iframe>
                                        <div style="text-align:right; margin-top:10px;">
@@ -734,122 +701,71 @@
             }
         }
 
-        init();
-
-        // 💡 [추가] 엑셀(CSV)로 데이터 내보내기 마법 💡
+        // 💡 엑셀 내보내기 
         function exportToCSV() {
-            if (!currentUser) {
-                alert("로그인 후 이용 가능합니다.");
-                return;
-            }
-
+            if (!currentUser) { alert("로그인 후 이용 가능합니다."); return; }
             const path = `users/${currentUser.uid}/diary`;
-
-            // 파이어베이스에서 내 데이터 전부 긁어오기
             db.ref(path).once('value').then((snapshot) => {
                 const data = snapshot.val();
-
-                if (!data) {
-                    alert("아직 작성된 일기가 없습니다!");
-                    return;
-                }
-
-                // 엑셀에서 한글이 깨지지 않게 해주는 마법의 주문 (BOM)
+                if (!data) { alert("아직 작성된 일기가 없습니다!"); return; }
                 let csvContent = "\uFEFF";
-                // 엑셀 첫 번째 줄 (헤더)
                 csvContent += "날짜,특이사항,오늘의 느낌,오늘의 할 일,오늘을 마감하며\n";
-
-                // 날짜순으로 정렬해서 줄바꿈 지키며 표로 만들기
                 const dates = Object.keys(data).sort();
                 dates.forEach(date => {
                     const entry = data[date];
-                    // 엑셀 칸이 안 밀리도록 내용의 엔터와 따옴표를 안전하게 포장
                     const special = `"${(entry.special || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
                     const feeling = `"${(entry.feeling || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
                     const todo = `"${(entry.todo || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
                     const closing = `"${(entry.closing || '').replace(/"/g, '""').replace(/<[^>]*>?/gm, '')}"`;
-
                     csvContent += `${date},${special},${feeling},${todo},${closing}\n`;
                 });
-
-                // 완성된 표를 CSV 파일로 강제 다운로드 시키기
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
+                link.setAttribute("href", URL.createObjectURL(blob));
                 link.setAttribute("download", "Strategic_Diary_Backup.csv");
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-
             }).catch((error) => {
                 console.error("엑셀 추출 실패:", error);
                 alert("데이터를 불러오는 중 오류가 발생했습니다.");
             });
         }
 
-        // 로그인이 성공했을 때 엑셀 버튼이 보이게 하기
-        auth.onAuthStateChanged((user) => {
-            const exportBtn = document.getElementById('exportBtn');
-            if (user) {
-                if (exportBtn) exportBtn.style.display = 'inline-block';
-            } else {
-                if (exportBtn) exportBtn.style.display = 'none';
-            }
-        });
-        // 💡 [추가] BBC 뉴스 피드 불러오기 (클릭 시 원본 링크 열기)
+        // 💡 BBC 뉴스 피드
         async function fetchBBCNews() {
             const newsContainer = document.getElementById('newsContainer');
             if (!newsContainer) return;
-
             newsContainer.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">뉴스를 불러오는 중입니다... 📡</p>';
-
             const rssUrl = 'http://feeds.bbci.co.uk/news/rss.xml';
             const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-
                 if (data.status === 'ok') {
-                    newsContainer.innerHTML = ''; // 로딩 메시지 지우기
-
-                    // 상위 5개 기사만 화면에 뿌리기
+                    newsContainer.innerHTML = '';
                     data.items.slice(0, 5).forEach(item => {
-                        // HTML 태그 찌꺼기 제거
                         const tempDiv = document.createElement("div");
                         tempDiv.innerHTML = item.description;
                         const cleanSummary = tempDiv.textContent || tempDiv.innerText || "";
-
                         const newsEl = document.createElement('div');
                         newsEl.className = 'news-item';
-
-                        // 🌟 [핵심] 클릭 시 새 창(_blank)으로 원본 기사(item.link) 열기!
                         newsEl.onclick = () => window.open(item.link, '_blank');
-
-                        // 날짜 포맷팅
                         const pubDate = new Date(item.pubDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-                        newsEl.innerHTML = `
-                            <div class="news-title">${item.title}</div>
-                            <div class="news-summary">${cleanSummary}</div>
-                            <div class="news-date">BBC News • ${pubDate}</div>
-                        `;
+                        newsEl.innerHTML = `<div class="news-title">${item.title}</div><div class="news-summary">${cleanSummary}</div><div class="news-date">BBC News • ${pubDate}</div>`;
                         newsContainer.appendChild(newsEl);
                     });
-                } else {
-                    throw new Error('RSS parsing failed');
-                }
+                } else { throw new Error('RSS parsing failed'); }
             } catch (error) {
                 console.error("뉴스 로딩 에러:", error);
                 newsContainer.innerHTML = '<p style="color: #e74c3c; text-align: center; padding: 20px;">뉴스 피드를 읽어올 수 없습니다.</p>';
             }
         }
 
-        // 다이어리가 켜질 때 뉴스도 자동으로 불러오도록 지시
-        fetchBBCNews();
+        init();
     </script>
+
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
