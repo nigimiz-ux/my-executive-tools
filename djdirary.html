@@ -505,8 +505,20 @@
                     </div>
                     <div id="calendarContainer"></div>
                 </div>
-            </main>
 
+                <div class="section-card" style="margin-top: 20px;">
+                    <h3
+                        style="display: flex; justify-content: space-between; align-items: center; margin:0; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+                        <span style="font-size: 1.1rem; font-weight: 700; color: #2c3e50;">🌍 Today's Global News</span>
+                        <span style="font-size: 0.75rem; font-weight: normal; color: #7f8c8d; cursor: pointer;"
+                            onclick="fetchBBCNews()">🔄 새로고침</span>
+                    </h3>
+                    <div id="newsContainer" class="news-list">
+                        <p style="color: #7f8c8d; text-align: center; padding: 20px;">뉴스를 불러오는 중입니다... 📡</p>
+                    </div>
+                </div>
+
+            </main>  
             <nav class="nav-right" id="dayNav"></nav>
         </div>
     </div>
@@ -695,8 +707,31 @@
             }).catch(error => { console.error("불러오기 실패:", error); Object.values(els.inputs).forEach(el => el.style.opacity = '1'); });
         }
 
+        // 💡 잃어버린 캘린더 기능 완벽 복구
         function loadCalendar() {
-            // ... 생략 ...
+            const container = document.getElementById('calendarContainer');
+            const savedUrl = localStorage.getItem('calendarUrl');
+
+            if (savedUrl) {
+                container.innerHTML = `<iframe src="${savedUrl}"></iframe>
+                                       <div style="text-align:right; margin-top:10px;">
+                                          <button class="config-btn" onclick="setupCalendar()">⚙ 설정 (Calendar Setup)</button>
+                                       </div>`;
+            } else {
+                container.innerHTML = `
+                    <div class="calendar-placeholder">
+                        <p>연동된 캘린더가 없습니다.</p>
+                        <button class="auth-btn" style="margin-top:15px;" onclick="setupCalendar()">캘린더 연결하기</button>
+                    </div>`;
+            }
+        }
+
+        function setupCalendar() {
+            const url = prompt("Google Calendar '공개 주소(URL)'를 입력하세요:\n(설정 > 캘린더 통합 > 이 캘린더의 공개 URL)");
+            if (url) {
+                localStorage.setItem('calendarUrl', url);
+                loadCalendar();
+            }
         }
 
         init();
