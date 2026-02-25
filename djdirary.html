@@ -382,6 +382,55 @@
             cursor: pointer;
             font-size: 0.8rem;
         }
+
+        /* 📰 BBC 뉴스 위젯 스타일 (다이어리용 밝은 테마) */
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .news-item {
+            padding: 15px;
+            border: 1px solid #e0e6ed;
+            border-radius: 10px;
+            background-color: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .news-item:hover {
+            border-color: #3498db;
+            background-color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .news-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .news-summary {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-date {
+            font-size: 0.75rem;
+            color: #bdc3c7;
+            margin-top: 10px;
+            text-align: right;
+        }
     </style>
 </head>
 
@@ -461,7 +510,16 @@
             <nav class="nav-right" id="dayNav"></nav>
         </div>
     </div>
-
+    <div class="section-card">
+        <h3 style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🌍 Today's Global News</span>
+            <span style="font-size: 0.75rem; font-weight: normal; color: #7f8c8d; cursor: pointer;"
+                onclick="fetchBBCNews()">🔄 새로고침</span>
+        </h3>
+        <div id="newsContainer" class="news-list">
+            <p style="color: #7f8c8d; text-align: center; padding: 20px;">뉴스를 불러오는 중입니다... 📡</p>
+        </div>
+    </div>
     <script>
         const state = { currentYear: new Date().getFullYear(), currentMonth: new Date().getMonth(), currentDay: new Date().getDate() };
         const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
@@ -705,7 +763,57 @@
                 if (exportBtn) exportBtn.style.display = 'none';
             }
         });
+        // 💡 [추가] BBC 뉴스 피드 불러오기 (클릭 시 원본 링크 열기)
+        async function fetchBBCNews() {
+            const newsContainer = document.getElementById('newsContainer');
+            if (!newsContainer) return;
 
+            newsContainer.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">뉴스를 불러오는 중입니다... 📡</p>';
+
+            const rssUrl = 'http://feeds.bbci.co.uk/news/rss.xml';
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    newsContainer.innerHTML = ''; // 로딩 메시지 지우기
+
+                    // 상위 5개 기사만 화면에 뿌리기
+                    data.items.slice(0, 5).forEach(item => {
+                        // HTML 태그 찌꺼기 제거
+                        const tempDiv = document.createElement("div");
+                        tempDiv.innerHTML = item.description;
+                        const cleanSummary = tempDiv.textContent || tempDiv.innerText || "";
+
+                        const newsEl = document.createElement('div');
+                        newsEl.className = 'news-item';
+
+                        // 🌟 [핵심] 클릭 시 새 창(_blank)으로 원본 기사(item.link) 열기!
+                        newsEl.onclick = () => window.open(item.link, '_blank');
+
+                        // 날짜 포맷팅
+                        const pubDate = new Date(item.pubDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                        newsEl.innerHTML = `
+                            <div class="news-title">${item.title}</div>
+                            <div class="news-summary">${cleanSummary}</div>
+                            <div class="news-date">BBC News • ${pubDate}</div>
+                        `;
+                        newsContainer.appendChild(newsEl);
+                    });
+                } else {
+                    throw new Error('RSS parsing failed');
+                }
+            } catch (error) {
+                console.error("뉴스 로딩 에러:", error);
+                newsContainer.innerHTML = '<p style="color: #e74c3c; text-align: center; padding: 20px;">뉴스 피드를 읽어올 수 없습니다.</p>';
+            }
+        }
+
+        // 다이어리가 켜질 때 뉴스도 자동으로 불러오도록 지시
+        fetchBBCNews();
     </script>
     <script>
         if ('serviceWorker' in navigator) {
